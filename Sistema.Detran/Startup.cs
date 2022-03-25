@@ -1,16 +1,17 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Sistema.Detran.Domain;
+using Sistema.Detran.Infra.Facade;
+using Sistema.Detran.Infra.Repositories;
+using Sistema.Detran.Infra.Repositories.EF;
+using Sistema.Detran.Infra.Singleton;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace Sistema.Detran
 {
@@ -30,8 +31,22 @@ namespace Sistema.Detran
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sistema.Detran", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sistema.Detran", Version = "v1"
+                
+                });
+
+                var apiPath = Path.Combine(AppContext.BaseDirectory, "Sistema.Detran.xml");
+                c.IncludeXmlComments(apiPath);
             });
+            services.AddSingleton<SingletonContainer>();
+            services.AddTransient<IVeiculoRepository, SistemaDetranRepository>();
+            services.AddTransient<IVeiculoDetran, VeiculoDetranFacade>();
+
+            services.AddDbContext<SistemaDetranContext>(opt =>
+                opt.UseInMemoryDatabase("Sistema"));
+
+            services.Configure<DetranOptions>(Configuration.GetSection("DetranOptions"));
+            services.AddHttpClient();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
